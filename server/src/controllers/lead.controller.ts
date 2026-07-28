@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { leadService } from "../services/lead.service";
 import { auditLogRepository } from "../repositories/auditLog.repository";
 import {
@@ -9,8 +9,14 @@ import {
   sendNotFound,
 } from "../utils/response";
 
+function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    fn(req, res, next).catch(next);
+  };
+}
+
 export const leadController = {
-  async create(req: Request, res: Response): Promise<void> {
+  create: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const createdBy = req.user!.id;
 
@@ -22,18 +28,18 @@ export const leadController = {
     }
 
     sendCreated(res, { lead: result.lead }, "Lead created successfully");
-  },
+  }),
 
-  async createForce(req: Request, res: Response): Promise<void> {
+  createForce: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const createdBy = req.user!.id;
 
     const lead = await leadService.createForce(organizationId, req.body, createdBy);
 
     sendCreated(res, { lead }, "Lead created successfully");
-  },
+  }),
 
-  async list(req: Request, res: Response): Promise<void> {
+  list: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const {
       page, limit, search, status, rating, assignedToId,
@@ -63,18 +69,18 @@ export const leadController = {
       result.pagination.limit,
       "Leads retrieved"
     );
-  },
+  }),
 
-  async getById(req: Request, res: Response): Promise<void> {
+  getById: asyncHandler(async (req: Request, res: Response) => {
     const { leadId } = req.params;
     const organizationId = req.user!.organizationId;
 
     const lead = await leadService.getById(leadId, organizationId);
 
     sendOk(res, { lead }, "Lead retrieved");
-  },
+  }),
 
-  async update(req: Request, res: Response): Promise<void> {
+  update: asyncHandler(async (req: Request, res: Response) => {
     const { leadId } = req.params;
     const organizationId = req.user!.organizationId;
     const updatedBy = req.user!.id;
@@ -82,9 +88,9 @@ export const leadController = {
     const lead = await leadService.update(leadId, organizationId, req.body, updatedBy);
 
     sendOk(res, { lead }, "Lead updated");
-  },
+  }),
 
-  async delete(req: Request, res: Response): Promise<void> {
+  delete: asyncHandler(async (req: Request, res: Response) => {
     const { leadId } = req.params;
     const organizationId = req.user!.organizationId;
     const deletedBy = req.user!.id;
@@ -92,9 +98,9 @@ export const leadController = {
     await leadService.delete(leadId, organizationId, deletedBy);
 
     sendNoContent(res);
-  },
+  }),
 
-  async assign(req: Request, res: Response): Promise<void> {
+  assign: asyncHandler(async (req: Request, res: Response) => {
     const { leadId } = req.params;
     const organizationId = req.user!.organizationId;
     const assignedBy = req.user!.id;
@@ -103,9 +109,9 @@ export const leadController = {
     const lead = await leadService.assign(leadId, organizationId, assignedToId, assignedBy);
 
     sendOk(res, { lead }, "Lead assigned successfully");
-  },
+  }),
 
-  async transfer(req: Request, res: Response): Promise<void> {
+  transfer: asyncHandler(async (req: Request, res: Response) => {
     const { leadId } = req.params;
     const organizationId = req.user!.organizationId;
     const transferredBy = req.user!.id;
@@ -113,9 +119,9 @@ export const leadController = {
     const lead = await leadService.transfer(leadId, organizationId, req.body, transferredBy);
 
     sendOk(res, { lead }, "Lead transferred successfully");
-  },
+  }),
 
-  async convert(req: Request, res: Response): Promise<void> {
+  convert: asyncHandler(async (req: Request, res: Response) => {
     const { leadId } = req.params;
     const organizationId = req.user!.organizationId;
     const convertedBy = req.user!.id;
@@ -123,9 +129,9 @@ export const leadController = {
     const result = await leadService.convert(leadId, organizationId, req.body, convertedBy);
 
     sendOk(res, result, "Lead converted successfully");
-  },
+  }),
 
-  async checkDuplicates(req: Request, res: Response): Promise<void> {
+  checkDuplicates: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const { email, phone, companyName, excludeId } = req.query;
 
@@ -138,9 +144,9 @@ export const leadController = {
     );
 
     sendOk(res, { duplicates }, "Duplicate check completed");
-  },
+  }),
 
-  async stats(req: Request, res: Response): Promise<void> {
+  stats: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const { dateFrom, dateTo } = req.query;
 
@@ -151,27 +157,27 @@ export const leadController = {
     );
 
     sendOk(res, { stats }, "Lead stats retrieved");
-  },
+  }),
 
-  async timeline(req: Request, res: Response): Promise<void> {
+  timeline: asyncHandler(async (req: Request, res: Response) => {
     const { leadId } = req.params;
     const organizationId = req.user!.organizationId;
 
     const timeline = await leadService.getTimeline(leadId, organizationId);
 
     sendOk(res, { timeline }, "Lead timeline retrieved");
-  },
+  }),
 
-  async getNotes(req: Request, res: Response): Promise<void> {
+  getNotes: asyncHandler(async (req: Request, res: Response) => {
     const { leadId } = req.params;
     const organizationId = req.user!.organizationId;
 
     const notes = await leadService.getNotes(leadId, organizationId);
 
     sendOk(res, { notes }, "Notes retrieved");
-  },
+  }),
 
-  async addNote(req: Request, res: Response): Promise<void> {
+  addNote: asyncHandler(async (req: Request, res: Response) => {
     const { leadId } = req.params;
     const organizationId = req.user!.organizationId;
     const createdByUserId = req.user!.id;
@@ -179,25 +185,25 @@ export const leadController = {
     const note = await leadService.addNote(leadId, organizationId, req.body, createdByUserId);
 
     sendCreated(res, { note }, "Note added");
-  },
+  }),
 
-  async updateNote(req: Request, res: Response): Promise<void> {
+  updateNote: asyncHandler(async (req: Request, res: Response) => {
     const { leadId, noteId } = req.params;
 
     const note = await leadService.updateNote(noteId, leadId, req.body);
 
     sendOk(res, { note }, "Note updated");
-  },
+  }),
 
-  async deleteNote(req: Request, res: Response): Promise<void> {
+  deleteNote: asyncHandler(async (req: Request, res: Response) => {
     const { leadId, noteId } = req.params;
 
     await leadService.deleteNote(noteId, leadId);
 
     sendNoContent(res);
-  },
+  }),
 
-  async bulkAssign(req: Request, res: Response): Promise<void> {
+  bulkAssign: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const assignedBy = req.user!.id;
     const { leadIds, assignedToId } = req.body;
@@ -205,9 +211,9 @@ export const leadController = {
     const result = await leadService.bulkAssign(leadIds, assignedToId, organizationId, assignedBy);
 
     sendOk(res, result, `${result.count} leads assigned`);
-  },
+  }),
 
-  async bulkUpdateStatus(req: Request, res: Response): Promise<void> {
+  bulkUpdateStatus: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const updatedBy = req.user!.id;
     const { leadIds, status } = req.body;
@@ -215,9 +221,9 @@ export const leadController = {
     const result = await leadService.bulkUpdateStatus(leadIds, status, organizationId, updatedBy);
 
     sendOk(res, result, `${result.count} leads updated`);
-  },
+  }),
 
-  async bulkDelete(req: Request, res: Response): Promise<void> {
+  bulkDelete: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const deletedBy = req.user!.id;
     const { leadIds } = req.body;
@@ -225,17 +231,17 @@ export const leadController = {
     const result = await leadService.bulkDelete(leadIds, organizationId, deletedBy);
 
     sendOk(res, result, `${result.count} leads deleted`);
-  },
+  }),
 
-  async importLeads(req: Request, res: Response): Promise<void> {
+  importLeads: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
 
     const result = await leadService.importLeads(req.body.leads, organizationId);
 
     sendOk(res, result, `Imported ${result.imported} leads`);
-  },
+  }),
 
-  async exportLeads(req: Request, res: Response): Promise<void> {
+  exportLeads: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const { status, assignedToId, dateFrom, dateTo } = req.query;
 
@@ -247,5 +253,5 @@ export const leadController = {
     });
 
     sendOk(res, { leads }, "Leads exported");
-  },
+  }),
 };

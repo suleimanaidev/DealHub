@@ -52,6 +52,7 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
 
   // ─── Prisma Validation Errors ────────────────────
   if (err instanceof Prisma.PrismaClientValidationError) {
+    logger.error({ validationError: err.message }, "Prisma client validation error");
     sendBadRequest(res, "Database validation error", err.message);
     return;
   }

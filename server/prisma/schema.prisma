@@ -51,6 +51,15 @@ model Organization {
   settings_records   Setting[]
   emailTemplates     EmailTemplate[]
   emailLogs          EmailLog[]
+  customerContacts   CustomerContact[]
+  pipelineStages     PipelineStage[]
+  deals              Deal[]
+  activities         Activity[]
+  notes              Note[]
+  invoices           Invoice[]
+  payments           Payment[]
+  auditLogs          AuditLog[]
+  attachments        Attachment[]
 
   @@map("organizations")
 }
@@ -89,9 +98,10 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
   assignedLeads         Lead[]      @relation("LeadAssignedTo")
   createdLeads          Lead[]      @relation("LeadCreatedBy")
-  assignedCustomers     Customer[]
-  assignedDeals         Deal[]
-  createdDeals          Deal[]
+  assignedCustomers     Customer[]       @relation("CustomerAssignedTo")
+  createdCustomers      Customer[]       @relation("CustomerCreatedBy")
+  assignedDeals         Deal[]      @relation("DealAssignedTo")
+  createdDeals          Deal[]      @relation("DealCreatedBy")
   assignedActivities    Activity[]  @relation("ActivityAssignedTo")
   createdActivities     Activity[]  @relation("ActivityCreatedBy")
   tasksCompleted        Task[]
@@ -104,6 +114,7 @@ model User {
   emailLogsCreated      EmailLog[]
   paymentsCreated       Payment[]
   invoicesCreated       Invoice[]
+  createdContacts       CustomerContact[]
 
   @@unique([organizationId, email])
   @@index([organizationId])
@@ -275,10 +286,11 @@ model Lead {
   source          LeadSource?   @relation(fields: [sourceId], references: [id], onDelete: SetNull)
   assignedUser    User?         @relation("LeadAssignedTo", fields: [assignedTo], references: [id], onDelete: SetNull)
   creator         User          @relation("LeadCreatedBy", fields: [createdBy], references: [id])
-  customer        Customer?     @relation("ConvertedFromLead")
   activities      Activity[]
   notes           Note[]
   attachments     Attachment[]
+  deals           Deal[]
+  convertedCustomer Customer? @relation("ConvertedFromLead")
 
   @@index([organizationId])
   @@index([sourceId])
@@ -306,7 +318,7 @@ model Customer {
   state           String?   @db.VarChar(100)
   postalCode      String?   @map("postal_code") @db.VarChar(20)
   country         String?   @db.VarChar(100)
-  leadId          String?   @map("lead_id") @db.Uuid
+  leadId          String?   @unique @map("lead_id") @db.Uuid
   assignedTo      String?   @map("assigned_to") @db.Uuid
   createdBy       String    @map("created_by") @db.Uuid
   status          String    @default("active") @db.VarChar(50)
@@ -318,8 +330,8 @@ model Customer {
 
   organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   lead           Lead?            @relation("ConvertedFromLead", fields: [leadId], references: [id], onDelete: SetNull)
-  assignedUser   User?            @relation(fields: [assignedTo], references: [id], onDelete: SetNull)
-  creator        User             @relation(fields: [createdBy], references: [id])
+  assignedUser   User?            @relation("CustomerAssignedTo", fields: [assignedTo], references: [id], onDelete: SetNull)
+  creator        User             @relation("CustomerCreatedBy", fields: [createdBy], references: [id])
   contacts       CustomerContact[]
   deals          Deal[]
   invoices       Invoice[]
@@ -455,8 +467,8 @@ model Deal {
   customer      Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
   contact       CustomerContact?   @relation(fields: [contactId], references: [id], onDelete: SetNull)
   lead          Lead?              @relation(fields: [leadId], references: [id], onDelete: SetNull)
-  assignedUser  User?              @relation(fields: [assignedTo], references: [id], onDelete: SetNull)
-  creator       User               @relation(fields: [createdBy], references: [id])
+  assignedUser  User?              @relation("DealAssignedTo", fields: [assignedTo], references: [id], onDelete: SetNull)
+  creator       User               @relation("DealCreatedBy", fields: [createdBy], references: [id])
   products      DealProduct[]
   invoices      Invoice[]
   activities    Activity[]
@@ -511,7 +523,7 @@ model DealProduct {
   deal    Deal    @relation(fields: [dealId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@id([dealId, productId])
+  @@unique([dealId, productId])
   @@map("deal_products")
 }
 
@@ -548,6 +560,7 @@ model Activity {
   meeting      Meeting?
   call         Call?
   notes        Note[]
+  attachments  Attachment[]
 
   @@index([organizationId])
   @@index([type])
@@ -647,6 +660,7 @@ model Note {
   deal         Deal?             @relation(fields: [dealId], references: [id], onDelete: Cascade)
   contact      CustomerContact?  @relation(fields: [contactId], references: [id], onDelete: Cascade)
   activity     Activity?         @relation(fields: [activityId], references: [id], onDelete: SetNull)
+  attachments  Attachment[]
 
   @@index([organizationId])
   @@index([leadId])
@@ -689,6 +703,7 @@ model Invoice {
   creator      User               @relation(fields: [createdBy], references: [id])
   lineItems    InvoiceLineItem[]
   payments     Payment[]
+  attachments  Attachment[]
 
   @@unique([organizationId, invoiceNumber], name: "uq_invoices_org_number")
   @@index([organizationId])

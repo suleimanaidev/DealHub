@@ -1,10 +1,16 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { notificationService } from "../services/notification.service";
 import { sendOk, sendCreated, sendNoContent, sendNotFound } from "../utils/response";
 import { logger } from "../utils/logger";
 
+function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    fn(req, res, next).catch(next);
+  };
+}
+
 export const notificationController = {
-  async list(req: Request, res: Response) {
+  list: asyncHandler(async (req: Request, res: Response) => {
     const { organizationId } = req.user!;
     const userId = req.user!.id;
     const { page, limit, isRead, type } = req.query;
@@ -20,17 +26,17 @@ export const notificationController = {
       notifications: result.notifications,
       pagination: result.pagination,
     }, "Notifications retrieved");
-  },
+  }),
 
-  async getUnreadCount(req: Request, res: Response) {
+  getUnreadCount: asyncHandler(async (req: Request, res: Response) => {
     const { organizationId } = req.user!;
     const userId = req.user!.id;
 
     const count = await notificationService.getUnreadCount(organizationId, userId);
     sendOk(res, { count }, "Unread count retrieved");
-  },
+  }),
 
-  async markAsRead(req: Request, res: Response) {
+  markAsRead: asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const { notificationId } = req.params;
 
@@ -41,29 +47,29 @@ export const notificationController = {
     }
 
     sendOk(res, notification, "Notification marked as read");
-  },
+  }),
 
-  async markAllAsRead(req: Request, res: Response) {
+  markAllAsRead: asyncHandler(async (req: Request, res: Response) => {
     const { organizationId } = req.user!;
     const userId = req.user!.id;
 
     await notificationService.markAllAsRead(organizationId, userId);
     sendOk(res, { success: true }, "All notifications marked as read");
-  },
+  }),
 
-  async delete(req: Request, res: Response) {
+  delete: asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const { notificationId } = req.params;
 
     await notificationService.delete(notificationId, userId);
     sendNoContent(res);
-  },
+  }),
 
-  async deleteAll(req: Request, res: Response) {
+  deleteAll: asyncHandler(async (req: Request, res: Response) => {
     const { organizationId } = req.user!;
     const userId = req.user!.id;
 
     await notificationService.deleteAll(organizationId, userId);
     sendNoContent(res);
-  },
+  }),
 };

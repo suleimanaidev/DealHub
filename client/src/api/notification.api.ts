@@ -1,4 +1,4 @@
-import apiClient from './client';
+import { apiClient } from './client';
 import type { Notification, NotificationListResponse, UnreadCountResponse } from '../types/notification';
 
 export const notificationApi = {

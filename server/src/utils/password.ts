@@ -62,8 +62,8 @@ export function validatePasswordStrength(password: string): PasswordValidation {
   if (/(.)\1{4,}/.test(password)) {
     errors.push("Password contains too many repeated characters");
   }
-  // Check for sequential characters (e.g., "abcde", "12345")
-  if (/(?:abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz|012|123|234|345|456|567|678|789)/i.test(password)) {
+  // Check for sequential characters of 4+ (e.g., "abcde", "1234")
+  if (/(?:abcd|bcde|cdef|defg|efgh|fghi|ghij|hijk|ijkl|jklm|klmn|lmno|mnop|nopq|opqr|pqrs|qrst|rstu|stuv|tuvw|uvwx|vwxy|wxyz|0123|1234|2345|3456|4567|5678|6789)/i.test(password)) {
     errors.push("Password contains sequential characters");
   }
 

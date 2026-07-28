@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { taskService } from "../services/task.service";
 import {
   sendOk,
@@ -7,17 +7,23 @@ import {
   sendPaginated,
 } from "../utils/response";
 
+function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    fn(req, res, next).catch(next);
+  };
+}
+
 export const taskController = {
-  async create(req: Request, res: Response): Promise<void> {
+  create: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const createdBy = req.user!.id;
 
     const task = await taskService.create(organizationId, req.body, createdBy);
 
     sendCreated(res, { task }, "Task created successfully");
-  },
+  }),
 
-  async list(req: Request, res: Response): Promise<void> {
+  list: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const {
       page, limit, search, status, priority, assignedToId,
@@ -51,18 +57,18 @@ export const taskController = {
       result.pagination.limit,
       "Tasks retrieved"
     );
-  },
+  }),
 
-  async getById(req: Request, res: Response): Promise<void> {
+  getById: asyncHandler(async (req: Request, res: Response) => {
     const { taskId } = req.params;
     const organizationId = req.user!.organizationId;
 
     const task = await taskService.getById(taskId, organizationId);
 
     sendOk(res, { task }, "Task retrieved");
-  },
+  }),
 
-  async update(req: Request, res: Response): Promise<void> {
+  update: asyncHandler(async (req: Request, res: Response) => {
     const { taskId } = req.params;
     const organizationId = req.user!.organizationId;
     const updatedBy = req.user!.id;
@@ -70,9 +76,9 @@ export const taskController = {
     const task = await taskService.update(taskId, organizationId, req.body, updatedBy);
 
     sendOk(res, { task }, "Task updated");
-  },
+  }),
 
-  async complete(req: Request, res: Response): Promise<void> {
+  complete: asyncHandler(async (req: Request, res: Response) => {
     const { taskId } = req.params;
     const organizationId = req.user!.organizationId;
     const completedBy = req.user!.id;
@@ -80,9 +86,9 @@ export const taskController = {
     const task = await taskService.complete(taskId, organizationId, completedBy);
 
     sendOk(res, { task }, "Task completed");
-  },
+  }),
 
-  async delete(req: Request, res: Response): Promise<void> {
+  delete: asyncHandler(async (req: Request, res: Response) => {
     const { taskId } = req.params;
     const organizationId = req.user!.organizationId;
     const deletedBy = req.user!.id;
@@ -90,26 +96,26 @@ export const taskController = {
     await taskService.delete(taskId, organizationId, deletedBy);
 
     sendNoContent(res);
-  },
+  }),
 
-  async stats(req: Request, res: Response): Promise<void> {
+  stats: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
 
     const stats = await taskService.getStats(organizationId);
 
     sendOk(res, { stats }, "Task stats retrieved");
-  },
+  }),
 
-  async getNotes(req: Request, res: Response): Promise<void> {
+  getNotes: asyncHandler(async (req: Request, res: Response) => {
     const { taskId } = req.params;
     const organizationId = req.user!.organizationId;
 
     const notes = await taskService.getNotes(taskId, organizationId);
 
     sendOk(res, { notes }, "Notes retrieved");
-  },
+  }),
 
-  async addNote(req: Request, res: Response): Promise<void> {
+  addNote: asyncHandler(async (req: Request, res: Response) => {
     const { taskId } = req.params;
     const organizationId = req.user!.organizationId;
     const createdByUserId = req.user!.id;
@@ -117,21 +123,21 @@ export const taskController = {
     const note = await taskService.addNote(taskId, organizationId, req.body.content, createdByUserId);
 
     sendCreated(res, { note }, "Note added");
-  },
+  }),
 
-  async deleteNote(req: Request, res: Response): Promise<void> {
+  deleteNote: asyncHandler(async (req: Request, res: Response) => {
     const { noteId } = req.params;
 
     await taskService.deleteNote(noteId, "");
 
     sendNoContent(res);
-  },
+  }),
 
-  async reminders(req: Request, res: Response): Promise<void> {
+  reminders: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
 
     const reminders = await taskService.getReminders(organizationId);
 
     sendOk(res, { reminders }, "Reminders retrieved");
-  },
+  }),
 };

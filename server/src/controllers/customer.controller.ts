@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { prisma } from "../database";
 import { customerRepository } from "../repositories/customer.repository";
 import { noteRepository } from "../repositories/note.repository";
@@ -11,8 +11,14 @@ import {
   NotFoundError,
 } from "../utils/response";
 
+function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    fn(req, res, next).catch(next);
+  };
+}
+
 export const customerController = {
-  async create(req: Request, res: Response): Promise<void> {
+  create: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const createdBy = req.user!.id;
 
@@ -31,9 +37,9 @@ export const customerController = {
     });
 
     sendCreated(res, { customer }, "Customer created successfully");
-  },
+  }),
 
-  async list(req: Request, res: Response): Promise<void> {
+  list: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const {
       page, limit, search, status, tier,
@@ -60,9 +66,9 @@ export const customerController = {
       result.pagination.limit,
       "Customers retrieved"
     );
-  },
+  }),
 
-  async getById(req: Request, res: Response): Promise<void> {
+  getById: asyncHandler(async (req: Request, res: Response) => {
     const { customerId } = req.params;
     const organizationId = req.user!.organizationId;
 
@@ -73,9 +79,9 @@ export const customerController = {
     }
 
     sendOk(res, { customer }, "Customer retrieved");
-  },
+  }),
 
-  async update(req: Request, res: Response): Promise<void> {
+  update: asyncHandler(async (req: Request, res: Response) => {
     const { customerId } = req.params;
     const organizationId = req.user!.organizationId;
     const updatedBy = req.user!.id;
@@ -96,9 +102,9 @@ export const customerController = {
     });
 
     sendOk(res, { customer }, "Customer updated");
-  },
+  }),
 
-  async delete(req: Request, res: Response): Promise<void> {
+  delete: asyncHandler(async (req: Request, res: Response) => {
     const { customerId } = req.params;
     const organizationId = req.user!.organizationId;
     const deletedBy = req.user!.id;
@@ -119,9 +125,9 @@ export const customerController = {
     });
 
     sendNoContent(res);
-  },
+  }),
 
-  async assign(req: Request, res: Response): Promise<void> {
+  assign: asyncHandler(async (req: Request, res: Response) => {
     const { customerId } = req.params;
     const organizationId = req.user!.organizationId;
     const assignedBy = req.user!.id;
@@ -139,17 +145,17 @@ export const customerController = {
     });
 
     sendOk(res, null, "Customer assigned");
-  },
+  }),
 
-  async stats(req: Request, res: Response): Promise<void> {
+  stats: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
 
     const stats = await customerRepository.getStats(organizationId);
 
     sendOk(res, { stats }, "Customer stats retrieved");
-  },
+  }),
 
-  async getContacts(req: Request, res: Response): Promise<void> {
+  getContacts: asyncHandler(async (req: Request, res: Response) => {
     const { customerId } = req.params;
     const organizationId = req.user!.organizationId;
 
@@ -164,9 +170,9 @@ export const customerController = {
     });
 
     sendOk(res, { contacts }, "Contacts retrieved");
-  },
+  }),
 
-  async addContact(req: Request, res: Response): Promise<void> {
+  addContact: asyncHandler(async (req: Request, res: Response) => {
     const { customerId } = req.params;
     const organizationId = req.user!.organizationId;
     const createdBy = req.user!.id;
@@ -186,9 +192,9 @@ export const customerController = {
     });
 
     sendCreated(res, { contact }, "Contact added");
-  },
+  }),
 
-  async updateContact(req: Request, res: Response): Promise<void> {
+  updateContact: asyncHandler(async (req: Request, res: Response) => {
     const { contactId } = req.params;
 
     const contact = await prisma.customerContact.update({
@@ -197,9 +203,9 @@ export const customerController = {
     });
 
     sendOk(res, { contact }, "Contact updated");
-  },
+  }),
 
-  async deleteContact(req: Request, res: Response): Promise<void> {
+  deleteContact: asyncHandler(async (req: Request, res: Response) => {
     const { contactId } = req.params;
 
     await prisma.customerContact.update({
@@ -208,9 +214,9 @@ export const customerController = {
     });
 
     sendNoContent(res);
-  },
+  }),
 
-  async getTimeline(req: Request, res: Response): Promise<void> {
+  getTimeline: asyncHandler(async (req: Request, res: Response) => {
     const { customerId } = req.params;
     const organizationId = req.user!.organizationId;
 
@@ -283,17 +289,17 @@ export const customerController = {
     timeline.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
     sendOk(res, { timeline, deals }, "Customer timeline retrieved");
-  },
+  }),
 
-  async getNotes(req: Request, res: Response): Promise<void> {
+  getNotes: asyncHandler(async (req: Request, res: Response) => {
     const { customerId } = req.params;
 
     const notes = await noteRepository.findByEntity("customer", customerId);
 
     sendOk(res, { notes }, "Notes retrieved");
-  },
+  }),
 
-  async addNote(req: Request, res: Response): Promise<void> {
+  addNote: asyncHandler(async (req: Request, res: Response) => {
     const { customerId } = req.params;
     const organizationId = req.user!.organizationId;
     const createdByUserId = req.user!.id;
@@ -308,9 +314,9 @@ export const customerController = {
     });
 
     sendCreated(res, { note }, "Note added");
-  },
+  }),
 
-  async getDeals(req: Request, res: Response): Promise<void> {
+  getDeals: asyncHandler(async (req: Request, res: Response) => {
     const { customerId } = req.params;
     const organizationId = req.user!.organizationId;
 
@@ -324,5 +330,5 @@ export const customerController = {
     });
 
     sendOk(res, { deals }, "Customer deals retrieved");
-  },
+  }),
 };

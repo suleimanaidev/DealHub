@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { dealRepository } from "../repositories/deal.repository";
 import { pipelineRepository } from "../repositories/pipeline.repository";
 import { noteRepository } from "../repositories/note.repository";
@@ -12,10 +12,16 @@ import {
   NotFoundError,
 } from "../utils/response";
 
+function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    fn(req, res, next).catch(next);
+  };
+}
+
 export const dealController = {
   // ─── Deal CRUD ──────────────────────────────────────
 
-  async create(req: Request, res: Response): Promise<void> {
+  create: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const createdBy = req.user!.id;
 
@@ -35,9 +41,9 @@ export const dealController = {
     });
 
     sendCreated(res, { deal }, "Deal created successfully");
-  },
+  }),
 
-  async list(req: Request, res: Response): Promise<void> {
+  list: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const {
       page, limit, search, status, stageId, pipelineId,
@@ -69,9 +75,9 @@ export const dealController = {
       result.pagination.limit,
       "Deals retrieved"
     );
-  },
+  }),
 
-  async getById(req: Request, res: Response): Promise<void> {
+  getById: asyncHandler(async (req: Request, res: Response) => {
     const { dealId } = req.params;
 
     const deal = await dealRepository.findById(dealId);
@@ -80,9 +86,9 @@ export const dealController = {
     }
 
     sendOk(res, { deal }, "Deal retrieved");
-  },
+  }),
 
-  async update(req: Request, res: Response): Promise<void> {
+  update: asyncHandler(async (req: Request, res: Response) => {
     const { dealId } = req.params;
     const organizationId = req.user!.organizationId;
     const updatedBy = req.user!.id;
@@ -98,9 +104,9 @@ export const dealController = {
     });
 
     sendOk(res, { deal }, "Deal updated");
-  },
+  }),
 
-  async delete(req: Request, res: Response): Promise<void> {
+  delete: asyncHandler(async (req: Request, res: Response) => {
     const { dealId } = req.params;
     const organizationId = req.user!.organizationId;
     const deletedBy = req.user!.id;
@@ -116,9 +122,9 @@ export const dealController = {
     });
 
     sendNoContent(res);
-  },
+  }),
 
-  async moveStage(req: Request, res: Response): Promise<void> {
+  moveStage: asyncHandler(async (req: Request, res: Response) => {
     const { dealId } = req.params;
     const { stageId } = req.body;
     const organizationId = req.user!.organizationId;
@@ -152,35 +158,35 @@ export const dealController = {
     });
 
     sendOk(res, { deal }, "Deal stage updated");
-  },
+  }),
 
-  async assign(req: Request, res: Response): Promise<void> {
+  assign: asyncHandler(async (req: Request, res: Response) => {
     const { dealId } = req.params;
     const { assignedToId } = req.body;
 
     await dealRepository.assignTo(dealId, assignedToId);
 
     sendOk(res, null, "Deal assigned");
-  },
+  }),
 
-  async stats(req: Request, res: Response): Promise<void> {
+  stats: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const { pipelineId } = req.query;
 
     const stats = await dealRepository.getStats(organizationId, pipelineId as string | undefined);
 
     sendOk(res, { stats }, "Deal stats retrieved");
-  },
+  }),
 
-  async forecast(req: Request, res: Response): Promise<void> {
+  forecast: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
 
     const forecast = await dealRepository.getForecast(organizationId);
 
     sendOk(res, { forecast }, "Revenue forecast retrieved");
-  },
+  }),
 
-  async getTimeline(req: Request, res: Response): Promise<void> {
+  getTimeline: asyncHandler(async (req: Request, res: Response) => {
     const { dealId } = req.params;
     const organizationId = req.user!.organizationId;
 
@@ -227,15 +233,15 @@ export const dealController = {
     timeline.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
     sendOk(res, { timeline }, "Deal timeline retrieved");
-  },
+  }),
 
-  async getNotes(req: Request, res: Response): Promise<void> {
+  getNotes: asyncHandler(async (req: Request, res: Response) => {
     const { dealId } = req.params;
     const notes = await noteRepository.findByEntity("deal", dealId);
     sendOk(res, { notes }, "Notes retrieved");
-  },
+  }),
 
-  async addNote(req: Request, res: Response): Promise<void> {
+  addNote: asyncHandler(async (req: Request, res: Response) => {
     const { dealId } = req.params;
     const organizationId = req.user!.organizationId;
     const createdByUserId = req.user!.id;
@@ -250,19 +256,19 @@ export const dealController = {
     });
 
     sendCreated(res, { note }, "Note added");
-  },
+  }),
 
   // ─── Pipeline Routes ────────────────────────────────
 
-  async listPipelines(req: Request, res: Response): Promise<void> {
+  listPipelines: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
 
     const pipelines = await pipelineRepository.findMany(organizationId);
 
     sendOk(res, { pipelines }, "Pipelines retrieved");
-  },
+  }),
 
-  async getPipeline(req: Request, res: Response): Promise<void> {
+  getPipeline: asyncHandler(async (req: Request, res: Response) => {
     const { pipelineId } = req.params;
 
     const pipeline = await pipelineRepository.findById(pipelineId);
@@ -271,9 +277,9 @@ export const dealController = {
     }
 
     sendOk(res, { pipeline }, "Pipeline retrieved");
-  },
+  }),
 
-  async createPipeline(req: Request, res: Response): Promise<void> {
+  createPipeline: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
 
     const pipeline = await pipelineRepository.create({
@@ -282,33 +288,33 @@ export const dealController = {
     });
 
     sendCreated(res, { pipeline }, "Pipeline created");
-  },
+  }),
 
-  async updatePipeline(req: Request, res: Response): Promise<void> {
+  updatePipeline: asyncHandler(async (req: Request, res: Response) => {
     const { pipelineId } = req.params;
 
     const pipeline = await pipelineRepository.update(pipelineId, req.body);
 
     sendOk(res, { pipeline }, "Pipeline updated");
-  },
+  }),
 
-  async deletePipeline(req: Request, res: Response): Promise<void> {
+  deletePipeline: asyncHandler(async (req: Request, res: Response) => {
     const { pipelineId } = req.params;
 
     await pipelineRepository.softDelete(pipelineId);
 
     sendNoContent(res);
-  },
+  }),
 
-  async getStageStats(req: Request, res: Response): Promise<void> {
+  getStageStats: asyncHandler(async (req: Request, res: Response) => {
     const { pipelineId } = req.params;
 
     const stats = await pipelineRepository.getStageStats(pipelineId);
 
     sendOk(res, { stages: stats }, "Stage stats retrieved");
-  },
+  }),
 
-  async createStage(req: Request, res: Response): Promise<void> {
+  createStage: asyncHandler(async (req: Request, res: Response) => {
     const { pipelineId } = req.params;
 
     const stage = await pipelineRepository.createStage({
@@ -317,36 +323,36 @@ export const dealController = {
     });
 
     sendCreated(res, { stage }, "Stage created");
-  },
+  }),
 
-  async updateStage(req: Request, res: Response): Promise<void> {
+  updateStage: asyncHandler(async (req: Request, res: Response) => {
     const { stageId } = req.params;
 
     const stage = await pipelineRepository.updateStage(stageId, req.body);
 
     sendOk(res, { stage }, "Stage updated");
-  },
+  }),
 
-  async deleteStage(req: Request, res: Response): Promise<void> {
+  deleteStage: asyncHandler(async (req: Request, res: Response) => {
     const { stageId } = req.params;
 
     await pipelineRepository.deleteStage(stageId);
 
     sendNoContent(res);
-  },
+  }),
 
-  async reorderStages(req: Request, res: Response): Promise<void> {
+  reorderStages: asyncHandler(async (req: Request, res: Response) => {
     const { pipelineId } = req.params;
     const { stageIds } = req.body;
 
     await pipelineRepository.reorderStages(pipelineId, stageIds);
 
     sendOk(res, null, "Stages reordered");
-  },
+  }),
 
   // ─── Kanban View ────────────────────────────────────
 
-  async kanban(req: Request, res: Response): Promise<void> {
+  kanban: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const { pipelineId } = req.query;
 
@@ -384,5 +390,5 @@ export const dealController = {
     }));
 
     sendOk(res, { stages, pipeline, totalValue: deals.reduce((sum, d) => sum + Number(d.value), 0) }, "Kanban data retrieved");
-  },
+  }),
 };

@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { userService } from "../services/user.service";
 import { auditLogRepository } from "../repositories/auditLog.repository";
 import { teamRepository } from "../repositories/team.repository";
@@ -8,6 +8,12 @@ import {
   sendNoContent,
   sendPaginated,
 } from "../utils/response";
+
+function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    fn(req, res, next).catch(next);
+  };
+}
 
 // ─── User Controller ───────────────────────────────────
 
@@ -19,22 +25,22 @@ export const userController = {
    *
    * Get current user's profile with roles and team.
    */
-  async me(req: Request, res: Response): Promise<void> {
+  me: asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const user = await userService.getProfileWithRoles(userId);
     sendOk(res, { user }, "Profile retrieved");
-  },
+  }),
 
   /**
    * PATCH /api/v1/users/me
    *
    * Update current user's profile.
    */
-  async updateMe(req: Request, res: Response): Promise<void> {
+  updateMe: asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const user = await userService.updateProfile(userId, req.body);
     sendOk(res, { user }, "Profile updated");
-  },
+  }),
 
   // ─── Admin CRUD ────────────────────────────────────
 
@@ -43,7 +49,7 @@ export const userController = {
    *
    * List all users with search, filter, sort, pagination.
    */
-  async list(req: Request, res: Response): Promise<void> {
+  list: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const {
       page, limit, search, isActive, teamId, roleId,
@@ -72,53 +78,53 @@ export const userController = {
       result.pagination.limit,
       "Users retrieved"
     );
-  },
+  }),
 
   /**
    * GET /api/v1/users/stats
    *
    * Get comprehensive user statistics.
    */
-  async stats(_req: Request, res: Response): Promise<void> {
+  stats: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const stats = await userService.getStats(organizationId);
     sendOk(res, { stats }, "User stats retrieved");
-  },
+  }),
 
   /**
    * POST /api/v1/users
    *
    * Create a new user directly (admin).
    */
-  async create(req: Request, res: Response): Promise<void> {
+  create: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const createdBy = req.user!.id;
 
     const user = await userService.createByAdmin(organizationId, req.body, createdBy);
 
     sendCreated(res, { user }, "User created successfully");
-  },
+  }),
 
   /**
    * GET /api/v1/users/:userId
    *
    * Get a single user with roles, team, and org info.
    */
-  async getById(req: Request, res: Response): Promise<void> {
+  getById: asyncHandler(async (req: Request, res: Response) => {
     const { userId } = req.params;
     const organizationId = req.user!.organizationId;
 
     const user = await userService.getById(userId, organizationId);
 
     sendOk(res, { user }, "User retrieved");
-  },
+  }),
 
   /**
    * PATCH /api/v1/users/:userId
    *
    * Update a user's profile, roles, status, team.
    */
-  async update(req: Request, res: Response): Promise<void> {
+  update: asyncHandler(async (req: Request, res: Response) => {
     const { userId } = req.params;
     const organizationId = req.user!.organizationId;
     const updatedBy = req.user!.id;
@@ -126,14 +132,14 @@ export const userController = {
     const user = await userService.updateByAdmin(userId, organizationId, req.body, updatedBy);
 
     sendOk(res, { user }, "User updated");
-  },
+  }),
 
   /**
    * DELETE /api/v1/users/:userId
    *
    * Soft-delete a user.
    */
-  async remove(req: Request, res: Response): Promise<void> {
+  remove: asyncHandler(async (req: Request, res: Response) => {
     const { userId } = req.params;
     const organizationId = req.user!.organizationId;
     const deletedBy = req.user!.id;
@@ -141,7 +147,7 @@ export const userController = {
     await userService.softDelete(userId, organizationId, deletedBy);
 
     sendNoContent(res);
-  },
+  }),
 
   // ─── Suspend / Unsuspend ───────────────────────────
 
@@ -150,7 +156,7 @@ export const userController = {
    *
    * Suspend a user account.
    */
-  async suspend(req: Request, res: Response): Promise<void> {
+  suspend: asyncHandler(async (req: Request, res: Response) => {
     const { userId } = req.params;
     const organizationId = req.user!.organizationId;
     const suspendedBy = req.user!.id;
@@ -158,14 +164,14 @@ export const userController = {
     const user = await userService.suspend(userId, organizationId, req.body, suspendedBy);
 
     sendOk(res, { user }, "User suspended");
-  },
+  }),
 
   /**
    * POST /api/v1/users/:userId/unsuspend
    *
    * Unsuspend a user account.
    */
-  async unsuspend(req: Request, res: Response): Promise<void> {
+  unsuspend: asyncHandler(async (req: Request, res: Response) => {
     const { userId } = req.params;
     const organizationId = req.user!.organizationId;
     const unsuspendedBy = req.user!.id;
@@ -173,7 +179,7 @@ export const userController = {
     const user = await userService.unsuspend(userId, organizationId, unsuspendedBy);
 
     sendOk(res, { user }, "User unsuspended");
-  },
+  }),
 
   // ─── Role Management ───────────────────────────────
 
@@ -182,7 +188,7 @@ export const userController = {
    *
    * Replace all roles for a user.
    */
-  async assignRoles(req: Request, res: Response): Promise<void> {
+  assignRoles: asyncHandler(async (req: Request, res: Response) => {
     const { userId } = req.params;
     const organizationId = req.user!.organizationId;
     const assignedBy = req.user!.id;
@@ -190,32 +196,32 @@ export const userController = {
     await userService.assignRoles(userId, organizationId, req.body.roleIds, assignedBy);
 
     sendOk(res, null, "Roles assigned successfully");
-  },
+  }),
 
   /**
    * GET /api/v1/users/:userId/roles
    *
    * Get a user's current roles.
    */
-  async getRoles(req: Request, res: Response): Promise<void> {
+  getRoles: asyncHandler(async (req: Request, res: Response) => {
     const { userId } = req.params;
     const organizationId = req.user!.organizationId;
 
     const user = await userService.getById(userId, organizationId);
 
     sendOk(res, { roles: user.roles }, "Roles retrieved");
-  },
+  }),
 
   /**
    * GET /api/v1/users/roles/available
    *
    * List all available roles in the organization.
    */
-  async availableRoles(req: Request, res: Response): Promise<void> {
+  availableRoles: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const roles = await userService.getAvailableRoles(organizationId);
     sendOk(res, { roles }, "Available roles retrieved");
-  },
+  }),
 
   // ─── Password Reset ────────────────────────────────
 
@@ -224,7 +230,7 @@ export const userController = {
    *
    * Admin reset a user's password.
    */
-  async resetPassword(req: Request, res: Response): Promise<void> {
+  resetPassword: asyncHandler(async (req: Request, res: Response) => {
     const { userId } = req.params;
     const organizationId = req.user!.organizationId;
     const resetBy = req.user!.id;
@@ -232,7 +238,7 @@ export const userController = {
     const result = await userService.adminResetPassword(userId, organizationId, req.body, resetBy);
 
     sendOk(res, result, "Password reset successfully");
-  },
+  }),
 
   // ─── Activity Logs ─────────────────────────────────
 
@@ -241,7 +247,7 @@ export const userController = {
    *
    * Get a user's activity/audit logs.
    */
-  async activityLogs(req: Request, res: Response): Promise<void> {
+  activityLogs: asyncHandler(async (req: Request, res: Response) => {
     const { userId } = req.params;
     const organizationId = req.user!.organizationId;
     const { page, limit, action, entityType, dateFrom, dateTo } = req.query;
@@ -263,72 +269,86 @@ export const userController = {
       result.pagination.limit,
       "Activity logs retrieved"
     );
-  },
+  }),
 
   /**
    * GET /api/v1/users/:userId/activity/summary
    *
    * Get a user's activity summary (last 30 days).
    */
-  async activitySummary(req: Request, res: Response): Promise<void> {
+  activitySummary: asyncHandler(async (req: Request, res: Response) => {
     const { userId } = req.params;
     const organizationId = req.user!.organizationId;
 
     const summary = await userService.getActivitySummary(organizationId, userId);
 
     sendOk(res, { summary }, "Activity summary retrieved");
-  },
+  }),
 
   // ─── Bulk Operations ───────────────────────────────
+
+  /**
+   * POST /api/v1/users/invite
+   *
+   * Invite a new user via email.
+   */
+  invite: asyncHandler(async (req: Request, res: Response) => {
+    const organizationId = req.user!.organizationId;
+    const createdBy = req.user!.id;
+
+    const user = await userService.createByAdmin(organizationId, req.body, createdBy);
+
+    sendCreated(res, { user }, "User invited successfully");
+  }),
 
   /**
    * POST /api/v1/users/bulk/activate
    *
    * Activate multiple users.
    */
-  async bulkActivate(req: Request, res: Response): Promise<void> {
+  bulkActivate: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const updatedBy = req.user!.id;
 
     const result = await userService.bulkActivate(req.body.userIds, organizationId, updatedBy);
 
     sendOk(res, result, `${result.count} users activated`);
-  },
+  }),
 
   /**
    * POST /api/v1/users/bulk/deactivate
    *
    * Deactivate multiple users.
    */
-  async bulkDeactivate(req: Request, res: Response): Promise<void> {
+  bulkDeactivate: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const updatedBy = req.user!.id;
 
     const result = await userService.bulkDeactivate(req.body.userIds, organizationId, updatedBy);
 
     sendOk(res, result, `${result.count} users deactivated`);
-  },
+  }),
 
   /**
    * POST /api/v1/users/bulk/delete
    *
    * Soft-delete multiple users.
    */
-  async bulkDelete(req: Request, res: Response): Promise<void> {
+  bulkDelete: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const deletedBy = req.user!.id;
 
     const result = await userService.bulkDelete(req.body.userIds, organizationId, deletedBy);
 
     sendOk(res, result, `${result.count} users deleted`);
-  },
+  }),
 
   /**
    * POST /api/v1/users/bulk/assign-role
    *
    * Assign a role to multiple users.
    */
-  async bulkAssignRole(req: Request, res: Response): Promise<void> {
+  bulkAssignRole: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const assignedBy = req.user!.id;
 
@@ -340,14 +360,14 @@ export const userController = {
     );
 
     sendOk(res, result, `Role assigned to ${result.count} users`);
-  },
+  }),
 
   /**
    * POST /api/v1/users/bulk/change-team
    *
    * Change team for multiple users.
    */
-  async bulkChangeTeam(req: Request, res: Response): Promise<void> {
+  bulkChangeTeam: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const updatedBy = req.user!.id;
 
@@ -359,7 +379,7 @@ export const userController = {
     );
 
     sendOk(res, result, `Team changed for ${result.count} users`);
-  },
+  }),
 
   // ─── Team Management ───────────────────────────────
 
@@ -368,31 +388,31 @@ export const userController = {
    *
    * Create a new team.
    */
-  async createTeam(req: Request, res: Response): Promise<void> {
+  createTeam: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
 
     const team = await teamRepository.create({ ...req.body, organizationId });
 
     sendCreated(res, { team }, "Team created");
-  },
+  }),
 
   /**
    * GET /api/v1/users/teams
    *
    * List all teams.
    */
-  async listTeams(req: Request, res: Response): Promise<void> {
+  listTeams: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const teams = await teamRepository.findMany(organizationId);
     sendOk(res, { teams }, "Teams retrieved");
-  },
+  }),
 
   /**
    * GET /api/v1/users/teams/:teamId
    *
    * Get a team with its members.
    */
-  async getTeam(req: Request, res: Response): Promise<void> {
+  getTeam: asyncHandler(async (req: Request, res: Response) => {
     const { teamId } = req.params;
     const team = await teamRepository.findById(teamId);
     if (!team) {
@@ -400,51 +420,51 @@ export const userController = {
       return;
     }
     sendOk(res, { team }, "Team retrieved");
-  },
+  }),
 
   /**
    * PATCH /api/v1/users/teams/:teamId
    *
    * Update a team.
    */
-  async updateTeam(req: Request, res: Response): Promise<void> {
+  updateTeam: asyncHandler(async (req: Request, res: Response) => {
     const { teamId } = req.params;
     const team = await teamRepository.update(teamId, req.body);
     sendOk(res, { team }, "Team updated");
-  },
+  }),
 
   /**
    * DELETE /api/v1/users/teams/:teamId
    *
    * Soft-delete a team.
    */
-  async deleteTeam(req: Request, res: Response): Promise<void> {
+  deleteTeam: asyncHandler(async (req: Request, res: Response) => {
     const { teamId } = req.params;
     await teamRepository.softDelete(teamId);
     sendNoContent(res);
-  },
+  }),
 
   /**
    * POST /api/v1/users/teams/:teamId/members
    *
    * Add a member to a team.
    */
-  async addTeamMember(req: Request, res: Response): Promise<void> {
+  addTeamMember: asyncHandler(async (req: Request, res: Response) => {
     const { teamId } = req.params;
     await teamRepository.addMember(teamId, req.body.userId);
     sendOk(res, null, "Member added to team");
-  },
+  }),
 
   /**
    * DELETE /api/v1/users/teams/:teamId/members/:userId
    *
    * Remove a member from a team.
    */
-  async removeTeamMember(req: Request, res: Response): Promise<void> {
+  removeTeamMember: asyncHandler(async (req: Request, res: Response) => {
     const { teamId, userId } = req.params;
     await teamRepository.removeMember(teamId, userId);
     sendNoContent(res);
-  },
+  }),
 
   // ─── Organization Activity ─────────────────────────
 
@@ -453,9 +473,9 @@ export const userController = {
    *
    * Get organization-wide activity summary.
    */
-  async organizationActivity(req: Request, res: Response): Promise<void> {
+  organizationActivity: asyncHandler(async (req: Request, res: Response) => {
     const organizationId = req.user!.organizationId;
     const summary = await auditLogRepository.getOrganizationActivitySummary(organizationId);
     sendOk(res, { summary }, "Organization activity retrieved");
-  },
+  }),
 };

@@ -100,10 +100,12 @@ export const authService = {
       },
     });
 
-    // Send verification email
+    // Send verification email (non-blocking - don't block registration if email fails)
     const verificationUrl = `${env.APP_URL}/verify-email?token=${verificationToken}`;
     const emailOptions = buildVerificationEmail(verificationUrl, input.firstName);
-    await sendEmail({ ...emailOptions, to: input.email });
+    sendEmail({ ...emailOptions, to: input.email }).catch((err) =>
+      logger.warn({ err }, "Failed to send verification email - user can still log in")
+    );
 
     logger.info({ userId: user.id, email: input.email }, "User registered successfully");
 
@@ -294,10 +296,12 @@ export const authService = {
       },
     });
 
-    // Send reset email
+    // Send reset email (non-blocking)
     const resetUrl = `${env.APP_URL}/reset-password?token=${token}`;
     const emailOptions = buildPasswordResetEmail(resetUrl, user.firstName);
-    await sendEmail({ ...emailOptions, to: user.email });
+    sendEmail({ ...emailOptions, to: user.email }).catch((err) =>
+      logger.warn({ err }, "Failed to send password reset email")
+    );
 
     return { message: "If an account exists, a password reset email has been sent." };
   },
@@ -404,7 +408,9 @@ export const authService = {
 
     const verificationUrl = `${env.APP_URL}/verify-email?token=${token}`;
     const emailOptions = buildVerificationEmail(verificationUrl, user.firstName);
-    await sendEmail({ ...emailOptions, to: user.email });
+    sendEmail({ ...emailOptions, to: user.email }).catch((err) =>
+      logger.warn({ err }, "Failed to resend verification email")
+    );
 
     return { message: "Verification email sent" };
   },

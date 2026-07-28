@@ -70,25 +70,23 @@ export function TaskFormPage() {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+  function cleanPayload(data: TaskFormData) {
+    const p: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(data)) {
+      if (value !== "" && value !== undefined && value !== null) {
+        p[key] = value;
+      }
+    }
+    return p;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     setError(null);
 
     try {
-      const payload = {
-        subject: form.subject,
-        description: form.description || undefined,
-        status: form.status,
-        priority: form.priority,
-        dueDate: form.dueDate || undefined,
-        assignedToId: form.assignedToId || undefined,
-        taskType: form.taskType,
-        reminderAt: form.reminderAt || undefined,
-        leadId: form.leadId || undefined,
-        customerId: form.customerId || undefined,
-        dealId: form.dealId || undefined,
-      };
+      const payload = cleanPayload(form);
 
       if (isEditMode && taskId) {
         await taskApi.update(taskId, payload as any);
@@ -98,8 +96,11 @@ export function TaskFormPage() {
         navigate(`/tasks/${result.data.task.id}`);
       }
     } catch (err: any) {
-      const message = err.response?.data?.message || "Failed to save task";
-      setError(message);
+      const data = err.response?.data;
+      const message = data?.message || "Failed to save task";
+      const details = data?.details;
+      const errorText = details ? `${message}: ${JSON.stringify(details)}` : message;
+      setError(errorText);
     } finally {
       setSaving(false);
     }
@@ -177,32 +178,12 @@ export function TaskFormPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Due Date & Time</label>
             <input type="datetime-local" value={form.dueDate} onChange={(e) => updateField("dueDate", e.target.value)} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Reminder</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Reminder Date & Time</label>
             <input type="datetime-local" value={form.reminderAt} onChange={(e) => updateField("reminderAt", e.target.value)} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Assigned To (User ID)</label>
-          <input type="text" value={form.assignedToId} onChange={(e) => updateField("assignedToId", e.target.value)} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="User UUID" />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Linked Lead ID</label>
-            <input type="text" value={form.leadId} onChange={(e) => updateField("leadId", e.target.value)} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Optional" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Linked Customer ID</label>
-            <input type="text" value={form.customerId} onChange={(e) => updateField("customerId", e.target.value)} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Optional" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Linked Deal ID</label>
-            <input type="text" value={form.dealId} onChange={(e) => updateField("dealId", e.target.value)} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Optional" />
           </div>
         </div>
 

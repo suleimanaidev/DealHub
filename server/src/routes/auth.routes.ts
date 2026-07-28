@@ -12,7 +12,7 @@ import {
   changePasswordSchema,
 } from "../validation";
 import { authLimiter } from "../middleware/rateLimiter";
-import { cookieParser } from "cookie-parser";
+import cookieParser from "cookie-parser";
 
 const router = Router();
 

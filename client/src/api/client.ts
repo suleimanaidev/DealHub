@@ -105,8 +105,11 @@ apiClient.interceptors.response.use(
         processQueue(refreshError, null);
         setAccessToken(null);
 
-        // Redirect to login
-        window.location.href = "/login";
+        // Redirect to login (skip if already on a public page)
+        const publicPaths = ["/login", "/register", "/"];
+        if (!publicPaths.includes(window.location.pathname)) {
+          window.location.href = "/login";
+        }
 
         return Promise.reject(refreshError);
       } finally {

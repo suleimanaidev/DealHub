@@ -111,7 +111,7 @@ export function LeadTable({
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
               <SortHeader field="status">Status</SortHeader>
               <SortHeader field="score">Score</SortHeader>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</SortHeader>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th>
               <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
             </tr>
           </thead>

@@ -9,7 +9,7 @@ export default function ServerErrorPage() {
       <p className="mt-2 text-sm text-gray-500 dark:text-gray-500">
         Something went wrong on our end. Please try again later.
       </p>
-      <Link to="/" className="mt-6">
+      <Link to="/dashboard" className="mt-6">
         <Button>Back to Dashboard</Button>
       </Link>
     </div>

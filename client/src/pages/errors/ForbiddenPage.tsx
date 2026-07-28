@@ -9,7 +9,7 @@ export default function ForbiddenPage() {
       <p className="mt-2 text-sm text-gray-500 dark:text-gray-500">
         You don't have permission to access this page.
       </p>
-      <Link to="/" className="mt-6">
+      <Link to="/dashboard" className="mt-6">
         <Button>Back to Dashboard</Button>
       </Link>
     </div>

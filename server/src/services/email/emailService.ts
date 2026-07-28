@@ -4,14 +4,22 @@ import { logger } from "../../utils/logger";
 
 // ─── Transporter ───────────────────────────────────────
 
+const isEmailConfigured =
+  env.SMTP_USER &&
+  env.SMTP_PASS &&
+  env.SMTP_USER !== "your-email@gmail.com" &&
+  env.SMTP_PASS !== "your-app-password";
+
 const transporter = nodemailer.createTransport({
   host: env.SMTP_HOST,
   port: env.SMTP_PORT,
   secure: env.SMTP_SECURE,
-  auth: {
-    user: env.SMTP_USER,
-    pass: env.SMTP_PASS,
-  },
+  connectionTimeout: 5000,
+  greetingTimeout: 5000,
+  socketTimeout: 5000,
+  auth: isEmailConfigured
+    ? { user: env.SMTP_USER, pass: env.SMTP_PASS }
+    : undefined,
 });
 
 // ─── Types ─────────────────────────────────────────────
@@ -42,6 +50,11 @@ export interface SendTemplateEmailOptions {
 // ─── Core Send Function ────────────────────────────────
 
 export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
+  if (!isEmailConfigured) {
+    logger.warn("Email not configured - skipping send");
+    return false;
+  }
+
   try {
     const info = await transporter.sendMail({
       from: env.EMAIL_FROM || env.SMTP_USER,

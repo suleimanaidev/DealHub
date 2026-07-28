@@ -23,13 +23,6 @@ export default function TopNavbar({ onMenuClick }: Props) {
         {/* Right side */}
         <div className="flex items-center gap-3">
           <NotificationBell />
-
-          {/* User avatar */}
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-              U
-            </div>
-          </div>
         </div>
       </div>
     </header>
