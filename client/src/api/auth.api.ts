@@ -36,7 +36,7 @@ export const authApi = {
   },
 
   async me() {
-    const { data } = await publicClient.get("/auth/me");
+    const { data } = await apiClient.get("/auth/me");
     return data;
   },
 

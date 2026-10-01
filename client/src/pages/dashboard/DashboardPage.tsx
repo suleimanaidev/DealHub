@@ -29,13 +29,13 @@ export function DashboardPage() {
       const dealStats = dealsRes?.data?.stats;
 
       setBarData(
-        (leadStats?.byStatus || [
+        ((leadStats?.byStatus || [
           { status: "New", count: 24 },
           { status: "Contacted", count: 18 },
           { status: "Qualified", count: 12 },
           { status: "Converted", count: 15 },
           { status: "Lost", count: 5 },
-        ]).map((s: any) => ({
+        ]) as Array<{ status?: string; stage?: string; count?: number }>).map((s) => ({
           label: s.status || s.stage || "Unknown",
           value: s.count || 0,
         }))
@@ -47,8 +47,9 @@ export function DashboardPage() {
         Array.from({ length: 6 }, (_, i) => {
           const d = new Date(now);
           d.setMonth(d.getMonth() - (5 - i));
+          const label = monthNames[d.getMonth()];
           return {
-            label: monthNames[d.getMonth()],
+            label: label ?? "Unknown",
             value: Math.floor(Math.random() * 50000) + 20000,
           };
         })
@@ -58,7 +59,7 @@ export function DashboardPage() {
         "#3B82F6", "#10B981", "#8B5CF6", "#F59E0B", "#EF4444", "#06B6D4", "#EC4899",
       ];
       setPieData(
-        (dealStats?.byStage || [
+        ((dealStats?.byStage || [
           { stage: "New", count: 12 },
           { stage: "Contacted", count: 8 },
           { stage: "Qualified", count: 6 },
@@ -66,10 +67,10 @@ export function DashboardPage() {
           { stage: "Negotiation", count: 3 },
           { stage: "Won", count: 5 },
           { stage: "Lost", count: 2 },
-        ]).map((s: any, i: number) => ({
+        ]) as Array<{ stage?: string; stageId?: string; count?: number }>).map((s, i) => ({
           label: s.stage || s.stageId || "Unknown",
           value: s.count || 0,
-          color: stageColors[i % stageColors.length],
+          color: stageColors[i % stageColors.length] || "#3B82F6",
         }))
       );
     } catch (error) {

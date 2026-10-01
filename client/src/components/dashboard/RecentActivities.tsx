@@ -7,7 +7,7 @@ interface Activity {
   type: string;
   action: string;
   entityType: string;
-  entityId: string;
+  entityId: string | null;
   userId?: string;
   userName?: string;
   timestamp: string;
@@ -65,7 +65,7 @@ export function RecentActivities({ activities: propActivities }: RecentActivitie
             type: a.entityType,
             action: a.action,
             entityType: a.entityType,
-            entityId: a.entityId,
+            entityId: a.entityId ?? null,
             userName: a.user ? `${a.user.firstName} ${a.user.lastName}` : "System",
             timestamp: a.createdAt,
             details: "",
@@ -133,7 +133,10 @@ export function RecentActivities({ activities: propActivities }: RecentActivitie
 
       <div className="space-y-4">
         {activities.map((activity) => {
-          const config = ACTION_CONFIG[activity.action] || ACTION_CONFIG.updated;
+          const config = ACTION_CONFIG[activity.action] ?? ACTION_CONFIG.updated;
+          if (!config) {
+            return null;
+          }
           return (
             <div
               key={activity.id}

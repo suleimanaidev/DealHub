@@ -41,7 +41,7 @@ export interface TaskWithActivity extends Task {
     creator: { id: string; firstName: string; lastName: string; avatarUrl?: string | null };
     lead?: { id: string; firstName: string; lastName: string } | null;
     customer?: { id: string; firstName?: string; lastName?: string; name?: string } | null;
-    deal?: { id: string; title: string; amount?: number } | null;
+    deal?: { id: string; title: string; value?: number } | null;
     notes?: any[];
   };
   completer?: { id: string; firstName: string; lastName: string } | null;
@@ -84,8 +84,8 @@ export const taskRepository = {
             assignee: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
             creator: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
             lead: { select: { id: true, firstName: true, lastName: true } },
-            customer: { select: { id: true, firstName: true, lastName: true, name: true } },
-            deal: { select: { id: true, title: true, amount: true } },
+            customer: { select: { id: true, name: true } },
+            deal: { select: { id: true, title: true, value: true } },
             notes: { where: { deletedAt: null }, orderBy: { createdAt: "desc" } },
           },
         },
@@ -105,11 +105,11 @@ export const taskRepository = {
             assignee: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
             creator: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
             lead: { select: { id: true, firstName: true, lastName: true } },
-            customer: { select: { id: true, firstName: true, lastName: true, name: true } },
-            deal: { select: { id: true, title: true, amount: true } },
+            customer: { select: { id: true, name: true } },
+            deal: { select: { id: true, title: true, value: true } },
             notes: {
               where: { deletedAt: null },
-              include: { createdByUser: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } },
+              include: { creator: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } },
               orderBy: { createdAt: "desc" },
             },
           },
@@ -230,8 +230,8 @@ export const taskRepository = {
               assignee: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
               creator: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
               lead: { select: { id: true, firstName: true, lastName: true } },
-              customer: { select: { id: true, firstName: true, lastName: true, name: true } },
-              deal: { select: { id: true, title: true, amount: true } },
+              customer: { select: { id: true, name: true } },
+              deal: { select: { id: true, title: true, value: true } },
             },
           },
           completer: { select: { id: true, firstName: true, lastName: true } },
@@ -285,9 +285,9 @@ export const taskRepository = {
             assignee: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
             creator: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
             lead: { select: { id: true, firstName: true, lastName: true } },
-            customer: { select: { id: true, firstName: true, lastName: true, name: true } },
-            deal: { select: { id: true, title: true, amount: true } },
-            notes: { where: { deletedAt: null }, include: { createdByUser: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } }, orderBy: { createdAt: "desc" } },
+            customer: { select: { id: true, name: true } },
+            deal: { select: { id: true, title: true, value: true } },
+            notes: { where: { deletedAt: null }, include: { creator: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } }, orderBy: { createdAt: "desc" } },
           },
         },
         completer: { select: { id: true, firstName: true, lastName: true } },
@@ -316,9 +316,9 @@ export const taskRepository = {
             assignee: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
             creator: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
             lead: { select: { id: true, firstName: true, lastName: true } },
-            customer: { select: { id: true, firstName: true, lastName: true, name: true } },
-            deal: { select: { id: true, title: true, amount: true } },
-            notes: { where: { deletedAt: null }, include: { createdByUser: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } }, orderBy: { createdAt: "desc" } },
+            customer: { select: { id: true, name: true } },
+            deal: { select: { id: true, title: true, value: true } },
+            notes: { where: { deletedAt: null }, include: { creator: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } }, orderBy: { createdAt: "desc" } },
           },
         },
         completer: { select: { id: true, firstName: true, lastName: true } },
@@ -374,16 +374,16 @@ export const taskRepository = {
     };
   },
 
-  async addNote(taskId: string, organizationId: string, content: string, createdByUserId: string) {
+  async addNote(taskId: string, organizationId: string, content: string, creatorId: string) {
     return prisma.note.create({
       data: {
         organizationId,
         content,
         activityId: taskId,
-        createdBy: createdByUserId,
+        createdBy: creatorId,
       },
       include: {
-        createdByUser: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+        creator: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
       },
     });
   },
@@ -391,7 +391,7 @@ export const taskRepository = {
   async getNotes(taskId: string) {
     return prisma.note.findMany({
       where: { activityId: taskId, deletedAt: null },
-      include: { createdByUser: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } },
+      include: { creator: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } },
       orderBy: { createdAt: "desc" },
     });
   },

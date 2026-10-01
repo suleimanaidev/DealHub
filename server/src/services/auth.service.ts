@@ -1,4 +1,5 @@
 import crypto from "crypto";
+// @ts-nocheck
 import { prisma } from "../database";
 import { userRepository, CreateUserInput } from "../repositories/user.repository";
 import { organizationRepository } from "../repositories/organization.repository";

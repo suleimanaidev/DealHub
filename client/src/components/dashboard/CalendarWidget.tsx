@@ -26,13 +26,17 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December",
 ];
 
+function getDateString(offsetDays = 0) {
+  return new Date(Date.now() + offsetDays * 86400000).toISOString().split("T")[0] ?? "";
+}
+
 const defaultEvents: CalendarEvent[] = [
-  { id: "1", title: "Team Standup", date: new Date().toISOString().split("T")[0], time: "09:00", type: "meeting", color: "bg-blue-500" },
-  { id: "2", title: "Client Call - Acme Corp", date: new Date().toISOString().split("T")[0], time: "14:00", type: "call", color: "bg-green-500" },
-  { id: "3", title: "Q4 Report Due", date: new Date(Date.now() + 2 * 86400000).toISOString().split("T")[0], time: "17:00", type: "deadline", color: "bg-red-500" },
-  { id: "4", title: "Follow up with leads", date: new Date(Date.now() + 1 * 86400000).toISOString().split("T")[0], time: "10:00", type: "task", color: "bg-yellow-500" },
-  { id: "5", title: "Sales review", date: new Date(Date.now() + 3 * 86400000).toISOString().split("T")[0], time: "11:00", type: "meeting", color: "bg-blue-500" },
-  { id: "6", title: "Product demo", date: new Date(Date.now() + 4 * 86400000).toISOString().split("T")[0], time: "15:00", type: "meeting", color: "bg-blue-500" },
+  { id: "1", title: "Team Standup", date: getDateString(0), time: "09:00", type: "meeting", color: "bg-blue-500" },
+  { id: "2", title: "Client Call - Acme Corp", date: getDateString(0), time: "14:00", type: "call", color: "bg-green-500" },
+  { id: "3", title: "Q4 Report Due", date: getDateString(2), time: "17:00", type: "deadline", color: "bg-red-500" },
+  { id: "4", title: "Follow up with leads", date: getDateString(1), time: "10:00", type: "task", color: "bg-yellow-500" },
+  { id: "5", title: "Sales review", date: getDateString(3), time: "11:00", type: "meeting", color: "bg-blue-500" },
+  { id: "6", title: "Product demo", date: getDateString(4), time: "15:00", type: "meeting", color: "bg-blue-500" },
 ];
 
 export function CalendarWidget({ events = defaultEvents }: CalendarWidgetProps) {

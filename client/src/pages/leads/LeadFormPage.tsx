@@ -55,7 +55,7 @@ export function LeadFormPage() {
         source: l.source?.name || (typeof l.source === "string" ? l.source : ""),
         status: l.status || "new",
         rating: l.tags?.[0] || "",
-        assignedToId: l.assignedTo || "",
+        assignedToId: typeof l.assignedTo === "string" ? l.assignedTo : l.assignedTo?.id || "",
       });
     } catch (err) {
       console.error("Failed to load lead:", err);

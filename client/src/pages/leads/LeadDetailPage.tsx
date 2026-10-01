@@ -172,12 +172,14 @@ export function LeadDetailPage() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Source</span>
-                <span className="font-medium">{lead.source?.name || lead.source || "—"}</span>
+                <span className="font-medium">{typeof lead.source === "string" ? lead.source : lead.source?.name || "—"}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Assigned To</span>
                 <span className="font-medium">
-                  {lead.assignedTo ? `${lead.assignedTo.firstName} ${lead.assignedTo.lastName}` : "Unassigned"}
+                  {typeof lead.assignedTo === "string"
+                    ? lead.assignedTo
+                    : lead.assignedTo ? `${lead.assignedTo.firstName} ${lead.assignedTo.lastName}` : "Unassigned"}
                 </span>
               </div>
               <div className="flex justify-between text-sm">

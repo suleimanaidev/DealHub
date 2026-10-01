@@ -21,7 +21,7 @@ export const noteRepository = {
       content: data.content,
       isPinned: data.isPinned || false,
       organization: { connect: { id: data.organizationId } },
-      createdByUser: { connect: { id: data.createdByUserId } },
+      creator: { connect: { id: data.createdByUserId } },
     };
 
     if (data.entityType === "lead") noteData.lead = { connect: { id: data.entityId } };
@@ -37,7 +37,7 @@ export const noteRepository = {
     return prisma.note.findUnique({
       where: { id },
       include: {
-        createdByUser: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+        creator: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
       },
     });
   },
@@ -51,7 +51,7 @@ export const noteRepository = {
     return prisma.note.findMany({
       where,
       include: {
-        createdByUser: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+        creator: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
       },
       orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
     });

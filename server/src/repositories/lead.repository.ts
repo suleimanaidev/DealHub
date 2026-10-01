@@ -3,6 +3,7 @@ import { prisma } from "../database";
 
 export interface CreateLeadInput {
   organizationId: string;
+  createdBy: string;
   firstName: string;
   lastName?: string;
   email?: string;
@@ -47,20 +48,26 @@ export interface UpdateLeadInput {
 
 export const leadRepository = {
   async create(data: CreateLeadInput): Promise<Lead> {
-    return prisma.lead.create({ data });
+    const { organizationId, createdBy, ...rest } = data;
+    return prisma.lead.create({
+      data: {
+        ...rest,
+        organization: { connect: { id: organizationId } },
+        creator: { connect: { id: createdBy } },
+      },
+    });
   },
 
   async findById(id: string) {
     return prisma.lead.findUnique({
       where: { id },
       include: {
-        assignedTo: { select: { id: true, firstName: true, lastName: true, email: true, avatarUrl: true } },
-        team: { select: { id: true, name: true } },
-        campaign: { select: { id: true, name: true } },
-        customer: { select: { id: true, firstName: true, lastName: true, email: true } },
+        assignedUser: { select: { id: true, firstName: true, lastName: true, email: true, avatarUrl: true } },
+        source: { select: { id: true, name: true } },
+        convertedCustomer: { select: { id: true, name: true, email: true } },
         notes: {
           where: { deletedAt: null },
-          include: { createdByUser: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } },
+          include: { creator: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } },
           orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
         },
         attachments: {
@@ -71,7 +78,7 @@ export const leadRepository = {
         activities: {
           where: { deletedAt: null },
           include: {
-            assignedTo: { select: { id: true, firstName: true, lastName: true } },
+            assignee: { select: { id: true, firstName: true, lastName: true } },
           },
           orderBy: { createdAt: "desc" },
           take: 20,
@@ -189,8 +196,8 @@ export const leadRepository = {
       prisma.lead.findMany({
         where,
         include: {
-          assignedTo: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
-          team: { select: { id: true, name: true } },
+          assignedUser: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+          source: { select: { id: true, name: true } },
           _count: { select: { notes: true, activities: true, attachments: true } },
         },
         orderBy,
@@ -306,13 +313,13 @@ export const leadRepository = {
     const [notes, activities, auditLogs] = await Promise.all([
       prisma.note.findMany({
         where: { leadId, deletedAt: null },
-        include: { createdByUser: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } },
+        include: { creator: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } },
         orderBy: { createdAt: "desc" },
       }),
       prisma.activity.findMany({
         where: { leadId, deletedAt: null },
         include: {
-          assignedTo: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+          assignee: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
         },
         orderBy: { createdAt: "desc" },
       }),
@@ -351,7 +358,7 @@ export const leadRepository = {
         type: "activity",
         action: `${activity.type}_${activity.status}`,
         content: activity.subject,
-        user: activity.assignedTo,
+        user: activity.assignee,
         createdAt: activity.createdAt,
         metadata: { type: activity.type, status: activity.status, priority: activity.priority },
       });
@@ -465,7 +472,7 @@ export const leadRepository = {
 
     return prisma.lead.findMany({
       where,
-      include: { assignedTo: { select: { firstName: true, lastName: true } } },
+      include: { assignedUser: { select: { firstName: true, lastName: true } } },
       orderBy: { createdAt: "desc" },
     });
   },

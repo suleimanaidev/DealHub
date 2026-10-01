@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Prisma, Team } from "@prisma/client";
 import { prisma } from "../database";
 

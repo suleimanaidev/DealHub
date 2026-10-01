@@ -313,8 +313,7 @@ export const bulkUpdateLeadStatusSchema = z.object({
 
 export const createCustomerSchema = z.object({
   body: z.object({
-    firstName: z.string().min(1, "First name is required").max(100),
-    lastName: z.string().max(100).optional(),
+    name: z.string().min(1, "Customer name is required").max(255),
     email: emailSchema.optional(),
     phone: z.string().optional(),
     companyName: z.string().max(255).optional(),
@@ -343,8 +342,7 @@ export const updateCustomerSchema = z.object({
     customerId: uuidSchema,
   }),
   body: z.object({
-    firstName: z.string().min(1).max(100).optional(),
-    lastName: z.string().max(100).optional(),
+    name: z.string().min(1).max(255).optional(),
     email: emailSchema.optional(),
     phone: z.string().optional(),
     companyName: z.string().max(255).optional(),
@@ -375,7 +373,7 @@ export const listCustomersSchema = z.object({
     tier: z.string().optional(),
     assignedToId: uuidSchema.optional(),
     teamId: uuidSchema.optional(),
-    sortBy: z.enum(["firstName", "lastName", "email", "companyName", "createdAt"]).default("createdAt"),
+    sortBy: z.enum(["name", "email", "createdAt"]).default("createdAt"),
     sortOrder: sortOrderSchema,
   }),
 });

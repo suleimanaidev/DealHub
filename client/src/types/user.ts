@@ -13,6 +13,7 @@ export interface User {
   isOwner: boolean;
   emailVerified: boolean;
   lastLoginAt?: string | null;
+  lockedUntil?: string | null;
   createdAt: string;
   updatedAt: string;
 }

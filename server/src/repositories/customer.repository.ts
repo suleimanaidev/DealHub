@@ -3,8 +3,8 @@ import { prisma } from "../database";
 
 export interface CreateCustomerInput {
   organizationId: string;
-  firstName: string;
-  lastName?: string;
+  createdBy: string;
+  name: string;
   email?: string;
   phone?: string;
   companyName?: string;
@@ -54,17 +54,24 @@ export interface UpdateCustomerInput {
 
 export const customerRepository = {
   async create(data: CreateCustomerInput): Promise<Customer> {
-    return prisma.customer.create({ data });
+    const { companyName, organizationId, createdBy, ...rest } = data;
+    return prisma.customer.create({
+      data: {
+        ...rest,
+        name: data.name || companyName || "Unknown",
+        organization: { connect: { id: organizationId } },
+        creator: { connect: { id: createdBy } },
+      },
+    });
   },
 
   async findById(id: string) {
     return prisma.customer.findUnique({
       where: { id },
       include: {
-        assignedTo: { select: { id: true, firstName: true, lastName: true, email: true } },
-        team: true,
+        assignedUser: { select: { id: true, firstName: true, lastName: true, email: true } },
         contacts: {
-          include: { contact: true },
+          select: { id: true, firstName: true, lastName: true, email: true, phone: true, jobTitle: true, isPrimary: true },
         },
         deals: {
           orderBy: { createdAt: "desc" },
@@ -126,22 +133,21 @@ export const customerRepository = {
 
     if (search) {
       where.OR = [
-        { firstName: { contains: search, mode: "insensitive" } },
-        { lastName: { contains: search, mode: "insensitive" } },
+        { name: { contains: search, mode: "insensitive" } },
         { email: { contains: search, mode: "insensitive" } },
-        { companyName: { contains: search, mode: "insensitive" } },
       ];
     }
 
+    const orderField = sortBy === "name" || sortBy === "email" || sortBy === "createdAt" ? sortBy : "createdAt";
     const orderBy: Prisma.CustomerOrderByWithRelationInput = {
-      [sortBy]: sortOrder,
+      [orderField]: sortOrder,
     };
 
     const [customers, total] = await Promise.all([
       prisma.customer.findMany({
         where,
         include: {
-          assignedTo: { select: { id: true, firstName: true, lastName: true } },
+          assignedUser: { select: { id: true, firstName: true, lastName: true } },
           _count: { select: { deals: true, activities: true, contacts: true } },
         },
         orderBy,

@@ -26,7 +26,11 @@ export function LineChart({ data, title, color = "#3B82F6", height = 200 }: Line
     .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
     .join(" ");
 
-  const areaPath = `${linePath} L ${points[points.length - 1].x} ${padding.top / 2 + innerHeight} L ${points[0].x} ${padding.top / 2 + innerHeight} Z`;
+  const lastPoint = points[points.length - 1];
+  const firstPoint = points[0];
+  const areaPath = lastPoint && firstPoint
+    ? `${linePath} L ${lastPoint.x} ${padding.top / 2 + innerHeight} L ${firstPoint.x} ${padding.top / 2 + innerHeight} Z`
+    : linePath;
 
   const yTicks = 5;
   const yTickValues = Array.from({ length: yTicks + 1 }, (_, i) =>

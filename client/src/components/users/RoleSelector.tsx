@@ -58,7 +58,8 @@ export function RoleSelector({
   function getSelectedNames() {
     const selected = roles.filter((r) => selectedRoleIds.includes(r.id));
     if (selected.length === 0) return "Select roles...";
-    if (selected.length === 1) return selected[0].name;
+    const selectedRole = selected[0];
+    if (selected.length === 1 && selectedRole) return selectedRole.name;
     return `${selected.length} roles selected`;
   }
 
@@ -170,7 +171,7 @@ export function SingleRoleSelector({
   disabled = false,
 }: SingleRoleSelectorProps) {
   const handleMultiChange = (roleIds: string[]) => {
-    onChange(roleIds.length > 0 ? roleIds[0] : null);
+    onChange(roleIds[0] ?? null);
   };
 
   return (

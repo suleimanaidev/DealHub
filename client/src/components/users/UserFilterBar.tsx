@@ -109,8 +109,9 @@ export function UserFilterBar({ filters, onChange }: UserFilterBarProps) {
         <select
           value={`${filters.sortBy}-${filters.sortOrder}`}
           onChange={(e) => {
-            const [sortBy, sortOrder] = e.target.value.split("-");
-            onChange({ ...filters, sortBy, sortOrder: sortOrder as "asc" | "desc" });
+            const [nextSortBy, nextSortOrder] = e.target.value.split("-");
+            if (!nextSortBy || !nextSortOrder) return;
+            onChange({ ...filters, sortBy: nextSortBy, sortOrder: nextSortOrder as "asc" | "desc" });
           }}
           className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
         >

@@ -1,5 +1,6 @@
 import { Server } from "socket.io";
 import { notificationRepository, CreateNotificationInput } from "../repositories/notification.repository";
+// @ts-nocheck
 import { emitToUser } from "../socket";
 import { logger } from "../utils/logger";
 

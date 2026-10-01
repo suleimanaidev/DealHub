@@ -12,7 +12,13 @@ export interface Lead {
   sourceId?: string;
   status: string;
   score: number;
-  assignedTo?: string;
+  assignedTo?: string | {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email?: string;
+    avatarUrl?: string;
+  };
   createdBy: string;
   convertedAt?: string;
   convertedCustomerId?: string;
@@ -22,13 +28,6 @@ export interface Lead {
   createdAt: string;
   updatedAt: string;
   deletedAt?: string;
-  assignedTo?: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email?: string;
-    avatarUrl?: string;
-  };
   source?: {
     id: string;
     name: string;

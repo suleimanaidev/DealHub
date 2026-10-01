@@ -27,7 +27,9 @@ export function PipelinePage() {
       setPipelines(result.data.pipelines);
       if (result.data.pipelines.length > 0 && !selectedPipelineId) {
         const defaultPipeline = result.data.pipelines.find((p) => p.isDefault) || result.data.pipelines[0];
-        setSelectedPipelineId(defaultPipeline.id);
+        if (defaultPipeline?.id) {
+          setSelectedPipelineId(defaultPipeline.id);
+        }
       }
     } catch (error) {
       console.error("Failed to load pipelines:", error);

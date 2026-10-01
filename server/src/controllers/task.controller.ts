@@ -18,6 +18,9 @@ export const taskController = {
     const organizationId = req.user!.organizationId;
     const createdBy = req.user!.id;
 
+    console.log("[TASK CREATE] body:", JSON.stringify(req.body, null, 2));
+    console.log("[TASK CREATE] orgId:", organizationId, "createdBy:", createdBy);
+
     const task = await taskService.create(organizationId, req.body, createdBy);
 
     sendCreated(res, { task }, "Task created successfully");

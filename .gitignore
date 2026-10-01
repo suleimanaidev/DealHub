@@ -12,3 +12,4 @@ test-reg.json
 test-register.json
 test-db.ts
 test-minimal.ts
+*.tsbuildinfo

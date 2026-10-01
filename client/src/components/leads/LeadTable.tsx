@@ -151,7 +151,7 @@ export function LeadTable({
                   {lead.companyName || "—"}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-500">
-                  {lead.source?.name || lead.source || "—"}
+                  {typeof lead.source === "string" ? lead.source : lead.source?.name || "—"}
                 </td>
                 <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                   <LeadStatusBadge status={lead.status} />

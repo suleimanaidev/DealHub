@@ -103,9 +103,9 @@ export const activityRepository = {
     return prisma.activity.findUnique({
       where: { id },
       include: {
-        assignedTo: { select: { id: true, firstName: true, lastName: true, email: true } },
+        assignee: { select: { id: true, firstName: true, lastName: true, email: true } },
         lead: { select: { id: true, firstName: true, lastName: true, email: true } },
-        customer: { select: { id: true, firstName: true, lastName: true, email: true } },
+        customer: { select: { id: true, name: true } },
         deal: { select: { id: true, title: true, amount: true } },
         contact: { select: { id: true, firstName: true, lastName: true, email: true } },
         task: true,
@@ -186,9 +186,9 @@ export const activityRepository = {
       prisma.activity.findMany({
         where,
         include: {
-          assignedTo: { select: { id: true, firstName: true, lastName: true } },
+          assignee: { select: { id: true, firstName: true, lastName: true } },
           lead: { select: { id: true, firstName: true, lastName: true } },
-          customer: { select: { id: true, firstName: true, lastName: true } },
+          customer: { select: { id: true, name: true } },
           deal: { select: { id: true, title: true } },
           task: true,
           meeting: true,
